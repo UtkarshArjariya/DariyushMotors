@@ -1,77 +1,86 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import Image from 'next/image';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import {
-  Wind,
-  CheckCircle2,
-  Fan,
-  Move,
-  Settings,
-  Building2,
-  Sun,
-  RefreshCw,
-  Zap,
+  ArrowDown,
+  ArrowUpRight,
   BatteryCharging,
+  Building2,
   Check,
-  Flower2,
-  Cpu,
-  MapPin,
-  Phone,
-  Mail,
-  Linkedin,
-  Twitter,
   FileDown,
+  Linkedin,
+  Mail,
+  MapPin,
   Menu,
-  X
+  Move,
+  Phone,
+  Settings,
+  Sun,
+  Twitter,
+  Wind,
+  X,
 } from 'lucide-react';
+import EnergyPathDiagram from './components/EnergyPathDiagram';
+import TurbineDiagram from './components/TurbineDiagram';
 
-const HERO_IMAGE_URL =
-  'https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80';
-
-const BROCHURE_URL =
-  'https://files.dariyushmotors.com/Vertical-Wind-Turbines.pptx.pdf';
+const BROCHURE_URL = 'https://files.dariyushmotors.com/Vertical-Wind-Turbines.pptx.pdf';
 
 const FEATURES = [
-  { icon: Move, title: 'Omnidirectional', desc: 'Captures wind from any direction without needing yaw alignment mechanisms.' },
-  { icon: Settings, title: 'Low Maintenance', desc: 'Generator is housed at the ground level, ensuring safe and easy accessibility.' },
-  { icon: Building2, title: 'Urban Ready', desc: 'Performs exceptionally well in turbulent and unpredictable urban wind currents.' },
-  { icon: Sun, title: 'Hybrid Designed', desc: 'Seamlessly integrates with solar panels for continuous power generation.' },
-];
-
-const STEPS = [
-  { icon: Wind, num: 1, title: 'Wind Capture', desc: '360° omnidirectional blades' },
-  { icon: RefreshCw, num: 2, title: 'Rotor Rotation', desc: 'Vertical shaft spins smoothly' },
-  { icon: Zap, num: 3, title: 'Power Generation', desc: 'Ground-level generator operation' },
-  { icon: BatteryCharging, num: 4, title: 'Storage / Grid', desc: 'Energy storage or grid supply' },
+  {
+    code: 'CAP-360',
+    icon: Move,
+    title: 'Omnidirectional',
+    desc: 'Captures wind from any direction without needing yaw alignment mechanisms.',
+  },
+  {
+    code: 'MNT-GL',
+    icon: Settings,
+    title: 'Low Maintenance',
+    desc: 'Generator is housed at the ground level, ensuring safe and easy accessibility.',
+  },
+  {
+    code: 'URB-01',
+    icon: Building2,
+    title: 'Urban Ready',
+    desc: 'Performs exceptionally well in turbulent and unpredictable urban wind currents.',
+  },
+  {
+    code: 'HYB-SW',
+    icon: Sun,
+    title: 'Hybrid Designed',
+    desc: 'Seamlessly integrates with solar panels for continuous power generation.',
+  },
 ];
 
 const PRODUCTS = [
   {
-    icon: Fan,
+    index: '01',
+    category: 'Commercial rooftop',
     title: '3kW / 5kW VAWT',
     desc: 'High-efficiency vertical axis wind turbines ideal for commercial rooftops.',
     features: ['Low noise profile', 'Hybrid compatible'],
-    popular: false,
-    bgClass: 'bg-gray-50',
+    capacity: '3 / 5',
+    unit: 'kW',
   },
   {
-    icon: Flower2,
+    index: '02',
+    category: 'Urban integration',
     title: 'Tulip Turbine (1-3kW)',
     desc: 'Aesthetic, bird-friendly design perfect for urban environments.',
     features: ['Architectural integration', 'Ultra-quiet operation'],
-    popular: true,
-    bgClass: 'bg-gradient-to-br from-primary/5 to-accent/5',
+    capacity: '1–3',
+    unit: 'kW',
   },
   {
-    icon: Cpu,
+    index: '03',
+    category: 'Integrated energy',
     title: 'Hybrid Systems',
     desc: 'Controllers, solar panels, and custom lithium battery solutions.',
     features: ['Smart energy management', '24/7 power generation'],
-    popular: false,
-    bgClass: 'bg-gray-50',
+    capacity: 'W+S',
+    unit: 'HYBRID',
   },
 ];
 
@@ -81,421 +90,286 @@ const NAV_LINKS = [
   { href: '#products', label: 'Products' },
 ];
 
+function BrandMark() {
+  return (
+    <span className="brand-mark" aria-hidden="true">
+      <span />
+      <span />
+    </span>
+  );
+}
+
 export default function Home() {
+  const pageRef = useRef(null);
   const [navScrolled, setNavScrolled] = useState(false);
-  const [btnText, setBtnText] = useState('Send Inquiry');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setNavScrolled(window.scrollY > 50);
+    const handleScroll = () => setNavScrolled(window.scrollY > 24);
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
 
     gsap.registerPlugin(ScrollTrigger);
-
-    gsap.from('.hero-content > *', {
-      y: 30,
-      opacity: 0,
-      duration: 1,
-      stagger: 0.15,
-      ease: 'power3.out',
-      delay: 0.2,
-    });
-
-    gsap.from('.turbine-container', {
-      scale: 0.9,
-      opacity: 0,
-      duration: 1.5,
-      ease: 'power2.out',
-      delay: 0.5,
-    });
-
-    const fadeUpElements = document.querySelectorAll('.fade-up');
-    fadeUpElements.forEach((el) => {
-      gsap.from(el, {
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out',
+    const animationContext = gsap.context(() => {
+      const media = gsap.matchMedia();
+      media.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from('.hero-copy > *', {
+          y: 24,
+          opacity: 0,
+          duration: 0.75,
+          stagger: 0.09,
+          ease: 'power2.out',
+        });
+        gsap.from('.turbine-figure', {
+          opacity: 0,
+          scale: 0.98,
+          duration: 1,
+          delay: 0.2,
+          ease: 'power2.out',
+        });
+        gsap.utils.toArray('.reveal').forEach((element) => {
+          gsap.from(element, {
+            scrollTrigger: { trigger: element, start: 'top 88%', once: true },
+            y: 22,
+            opacity: 0,
+            duration: 0.7,
+            ease: 'power2.out',
+          });
+        });
       });
-    });
+      return () => media.revert();
+    }, pageRef);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      window.removeEventListener('keydown', handleKeyDown);
+      animationContext.revert();
     };
-  }, []);
-
-  const handleContactSubmit = useCallback((e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setBtnText('Sending...');
-
-    setTimeout(() => {
-      setBtnText('Message Sent!');
-      setSubmitSuccess(true);
-      e.target.reset();
-
-      setTimeout(() => {
-        setBtnText('Send Inquiry');
-        setSubmitSuccess(false);
-        setIsSubmitting(false);
-      }, 3000);
-    }, 1500);
   }, []);
 
   const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
 
+  const handleContactSubmit = useCallback((event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    window.setTimeout(() => {
+      event.target.reset();
+      setSubmitSuccess(true);
+      setIsSubmitting(false);
+      window.setTimeout(() => setSubmitSuccess(false), 3000);
+    }, 900);
+  }, []);
+
   return (
-    <main>
-      {/* ─── Navbar ─── */}
-      <nav
-        className="fixed w-full z-50 glass-nav border-b border-white/10 transition-all duration-300"
-        style={{ background: navScrolled ? 'rgba(10, 31, 44, 0.95)' : 'rgba(10, 31, 44, 0.7)' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <a href="#hero" className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                <Wind className="text-primary w-5 h-5" />
-              </div>
-              <span className="font-bold text-xl tracking-tight text-white mix-blend-difference">
-                Dariyush Motors
-              </span>
-            </a>
+    <main ref={pageRef}>
+      <nav className={`site-nav ${navScrolled ? 'site-nav-scrolled' : ''}`} aria-label="Primary navigation">
+        <div className="site-container nav-inner">
+          <a href="#hero" className="brand" aria-label="Dariyush Motors, back to top">
+            <BrandMark />
+            <span className="brand-name">Dariyush Motors</span>
+            <span className="brand-division">Vertical Wind Systems</span>
+          </a>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-8 items-center">
-              {NAV_LINKS.map(({ href, label }) => (
-                <a key={href} href={href} className="text-sm font-medium text-gray-300 hover:text-accent transition-colors">
-                  {label}
-                </a>
-              ))}
-              <a href="#contact" className="btn-primary">Get a Quote</a>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden text-gray-300 hover:text-white focus:outline-none"
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              aria-label="Toggle navigation menu"
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+          <div className="desktop-nav">
+            {NAV_LINKS.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}
+            <a href="#contact" className="button button-compact">Project enquiry <ArrowUpRight size={15} /></a>
           </div>
+
+          <button
+            type="button"
+            className="menu-button"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
+            aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
-        {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-secondary border-t border-white/10 absolute top-20 left-0 w-full flex flex-col items-center py-6 space-y-4 shadow-xl">
-            {NAV_LINKS.map(({ href, label }) => (
-              <a key={href} href={href} onClick={closeMobileMenu} className="text-base font-medium text-gray-300 hover:text-accent transition-colors">
-                {label}
-              </a>
-            ))}
-            <a href="#contact" onClick={closeMobileMenu} className="btn-primary mt-2">Get a Quote</a>
+          <div id="mobile-navigation" className="mobile-nav">
+            {NAV_LINKS.map(({ href, label }) => <a key={href} href={href} onClick={closeMobileMenu}>{label}</a>)}
+            <a href="#contact" onClick={closeMobileMenu}>Project enquiry <ArrowUpRight size={16} /></a>
           </div>
         )}
       </nav>
 
-      {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-primary" id="hero">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-transparent z-10" />
-          <Image
-            src={HERO_IMAGE_URL}
-            alt="Wind energy landscape"
-            fill
-            className="object-cover opacity-40"
-            priority
-            sizes="100vw"
-          />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full grid md:grid-cols-2 gap-12 items-center">
-          <div className="hero-content">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel mb-6 border border-accent/30 text-accent text-sm font-medium">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              Next-Gen Renewable Energy
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
-              Power From <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-emerald-400">
-                Every Direction.
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-lg font-light leading-relaxed">
-              Advanced Vertical Axis Wind Turbines built for Urban India. Resilient, omnidirectional,
-              and designed for decentralized power.
+      <section id="hero" className="hero-section">
+        <div className="hero-grid site-container">
+          <div className="hero-copy">
+            <p className="eyebrow"><span>VAWT / India</span> Decentralised renewable energy</p>
+            <h1>Wind does not arrive in one direction.</h1>
+            <p className="hero-lead">
+              Vertical Axis Wind Turbines engineered for urban rooftops, turbulent airflow, and low-wind environments.
             </p>
-
-            <div className="flex flex-wrap gap-4 mb-12">
-              <a href="#contact" className="btn-primary text-lg px-8 py-4">Get a Quote</a>
-              <a href="#products" className="glass-btn text-lg px-8 py-4 text-white">Explore Products</a>
-              <a
-                href={BROCHURE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass-btn text-lg px-8 py-4 text-white flex items-center gap-2"
-              >
-                <FileDown className="w-5 h-5" /> Download Brochure
+            <div className="hero-actions">
+              <a href="#contact" className="button">Get a quote <ArrowUpRight size={18} /></a>
+              <a href={BROCHURE_URL} target="_blank" rel="noopener noreferrer" className="text-link">
+                <FileDown size={17} /> Download brochure
               </a>
             </div>
+            <dl className="hero-facts">
+              <div><dt>Capture</dt><dd>Omnidirectional</dd></div>
+              <div><dt>Deployment</dt><dd>Urban / Rooftop</dd></div>
+              <div><dt>System</dt><dd>Solar-hybrid ready</dd></div>
+            </dl>
+          </div>
+          <div className="hero-diagram-wrap">
+            <TurbineDiagram />
+          </div>
+        </div>
+        <a className="hero-scroll" href="#about" aria-label="Scroll to company overview">
+          <span>System overview</span><ArrowDown size={17} />
+        </a>
+      </section>
 
-            <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-gray-400">
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Incorporated 2024</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Urban Conditions</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Hybrid Ready</div>
+      <section id="about" className="section section-concrete">
+        <div className="site-container">
+          <header className="section-header reveal">
+            <p className="section-index">01 / Operating principle</p>
+            <div>
+              <h2>Built for complex urban airflow.</h2>
+              <p>Dariyushmotors Pvt Ltd is a renewable energy company focused on Vertical Axis Wind Turbine (VAWT) technology designed for urban, rooftop, and low-wind environments.</p>
             </div>
+          </header>
+
+          <div className="feature-register reveal">
+            {FEATURES.map(({ code, icon: Icon, title, desc }) => (
+              <article className="feature-row" key={code}>
+                <span className="feature-code">{code}</span>
+                <span className="feature-icon" aria-hidden="true"><Icon size={25} strokeWidth={1.5} /></span>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </article>
+            ))}
           </div>
 
-          <div className="relative h-[400px] md:h-[600px] hidden md:flex items-center justify-center turbine-container">
-            <div className="absolute w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px]" />
-            <div className="relative z-10 animate-spin-slow">
-              <Fan className="w-64 h-64 text-accent/80 stroke-[0.5]" />
+          <div className="urban-context reveal">
+            <div className="roofline" aria-hidden="true">
+              <span className="building building-a" />
+              <span className="building building-b" />
+              <span className="building building-c" />
+              <span className="mini-turbine"><i /><b /></span>
+              <span className="wind-line wind-line-one" />
+              <span className="wind-line wind-line-two" />
+            </div>
+            <div className="urban-context-copy">
+              <span className="technical-label">Deployment condition / URBAN</span>
+              <p>Vertical geometry accepts changing wind direction without a yaw mechanism, while the generator remains accessible at ground level.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── About / Features ─── */}
-      <section id="about" className="py-24 bg-surface relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mb-16 fade-up">
-            <h2 className="text-4xl font-bold text-secondary mb-6 tracking-tight">
-              Engineering Decentralized Power for India&apos;s Future
-            </h2>
-            <p className="text-xl text-gray-600 font-light">
-              Dariyushmotors Pvt Ltd is a renewable energy company focused on Vertical Axis Wind
-              Turbine (VAWT) technology designed for urban, rooftop, and low-wind environments.
-            </p>
-          </div>
+      <section id="how-it-works" className="section section-carbon">
+        <div className="site-container">
+          <header className="section-header section-header-light reveal">
+            <p className="section-index">02 / Energy path</p>
+            <div>
+              <h2>One connected system.</h2>
+              <p>Wind is converted through a direct mechanical and electrical sequence, with solar input available for hybrid generation.</p>
+            </div>
+          </header>
+          <div className="reveal"><EnergyPathDiagram /></div>
+        </div>
+      </section>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
-            {FEATURES.map(({ icon: Icon, title, desc }, i) => (
-              <div
-                key={title}
-                className="glass-card p-8 rounded-2xl bg-white fade-up hover:-translate-y-2 transition-transform duration-300"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-6">
-                  <Icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-3 text-secondary">{title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-              </div>
+      <section id="products" className="section section-products">
+        <div className="site-container">
+          <header className="section-header reveal">
+            <p className="section-index">03 / System configurations</p>
+            <div>
+              <h2>Equipment for distributed generation.</h2>
+              <p>Three configurations for rooftop wind generation, urban integration, and combined renewable-energy systems.</p>
+            </div>
+          </header>
+
+          <div className="product-register reveal">
+            {PRODUCTS.map(({ index, category, title, desc, features, capacity, unit }) => (
+              <article className="product-row" key={title}>
+                <div className="product-id"><span>{index}</span><small>{category}</small></div>
+                <div className="product-capacity" aria-label={`${capacity} ${unit}`}><strong>{capacity}</strong><span>{unit}</span></div>
+                <div className="product-description"><h3>{title}</h3><p>{desc}</p></div>
+                <ul>{features.map((feature) => <li key={feature}><Check size={15} />{feature}</li>)}</ul>
+                <button type="button" className="product-action">View details <ArrowUpRight size={17} /></button>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── How It Works ─── */}
-      <section id="how-it-works" className="py-24 bg-primary text-white relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-20 fade-up">
-            <h2 className="text-4xl font-bold mb-6">How It Works</h2>
-            <p className="text-gray-300">
-              Unlike traditional turbines, our VAWT does not require wind alignment. It captures
-              wind from any direction, making it ideal for rooftops and urban landscapes.
-            </p>
+      <section id="contact" className="section section-contact">
+        <div className="site-container contact-grid">
+          <div className="contact-intro reveal">
+            <p className="section-index">04 / Project enquiry</p>
+            <h2>Plan a distributed energy system.</h2>
+            <p>Contact us to discuss your project requirements, get a quote, or learn more about our hybrid energy solutions.</p>
+
+            <address className="contact-details">
+              <a href="https://maps.google.com/?q=Shiv+Sadan+Jail+Road+Vidisha+Madhya+Pradesh+464001" target="_blank" rel="noopener noreferrer">
+                <MapPin size={20} /><span><small>Head office</small>Shiv Sadan, Jail Road, Vidisha, MP – 464001</span>
+              </a>
+              <a href="tel:+919685536795"><Phone size={20} /><span><small>Phone / WhatsApp</small>+91 9685536795 / 7222948482</span></a>
+              <a href="mailto:Dariyushmotors@gmail.com"><Mail size={20} /><span><small>Email</small>Dariyushmotors@gmail.com</span></a>
+            </address>
           </div>
 
-          <div className="relative">
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/10 hidden md:block -translate-y-1/2" />
-
-            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-12 relative z-10">
-              {STEPS.map(({ icon: Icon, num, title, desc }, i) => (
-                <div
-                  key={num}
-                  className="text-center group fade-up"
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
-                  <div className="w-20 h-20 mx-auto bg-secondary rounded-full border border-white/20 flex items-center justify-center mb-6 relative group-hover:border-accent transition-colors duration-300">
-                    <Icon className="w-8 h-8 text-accent" />
-                    <div className="absolute -right-2 -top-2 w-6 h-6 bg-accent text-primary rounded-full text-xs font-bold flex items-center justify-center">
-                      {num}
-                    </div>
-                  </div>
-                  <h4 className="font-bold mb-2">{title}</h4>
-                  <p className="text-sm text-gray-400">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Products ─── */}
-      <section id="products" className="py-24 bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-secondary mb-12 text-center fade-up">Our Solutions</h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {PRODUCTS.map(({ icon: Icon, title, desc, features, popular, bgClass }, i) => (
-              <div
-                key={title}
-                className={`bg-white rounded-2xl p-8 border ${
-                  popular ? 'border-accent/20 shadow-md' : 'border-gray-100 shadow-sm'
-                } relative hover:shadow-xl transition-all duration-300 fade-up group`}
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                {popular && (
-                  <div className="absolute -top-3 right-8 bg-accent text-primary text-xs font-bold px-3 py-1 rounded-full">
-                    Popular
-                  </div>
-                )}
-                <div className={`h-48 ${bgClass} rounded-xl mb-6 flex items-center justify-center overflow-hidden`}>
-                  <Icon className="w-16 h-16 text-primary/20 group-hover:text-accent transition-colors duration-300" />
-                </div>
-                <h3 className="text-xl font-bold text-secondary mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm mb-6">{desc}</p>
-                <ul className="space-y-2 mb-8">
-                  {features.map((f) => (
-                    <li key={f} className="flex items-center text-sm text-gray-600 gap-2">
-                      <Check className="w-4 h-4 text-accent flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className={`w-full py-3 rounded-lg font-medium transition-colors duration-300 ${
-                    popular
-                      ? 'bg-primary text-white hover:bg-primary/90'
-                      : 'border border-primary/10 text-primary hover:bg-primary hover:text-white'
-                  }`}
-                >
-                  View Details
-                </button>
+          <div className="enquiry-panel reveal">
+            <div className="panel-heading"><span>Project intake form</span><span>DM / 04</span></div>
+            <form onSubmit={handleContactSubmit}>
+              <div className="form-row">
+                <label><span>Name *</span><input type="text" name="name" autoComplete="name" required /></label>
+                <label><span>Company</span><input type="text" name="company" autoComplete="organization" /></label>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Contact ─── */}
-      <section id="contact" className="py-24 bg-secondary text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-secondary to-secondary" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid md:grid-cols-2 gap-16">
-            <div className="fade-up">
-              <h2 className="text-4xl font-bold mb-6">Start Generating Your Own Power.</h2>
-              <p className="text-gray-400 mb-8 text-lg">
-                Contact us to discuss your project requirements, get a quote, or learn more about
-                our hybrid energy solutions.
-              </p>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Head Office</p>
-                    <p className="font-medium">Shiv Sadan, Jail Road, Vidisha, MP – 464001</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Phone / WhatsApp</p>
-                    <p className="font-medium">+91 9685536795 / 7222948482</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Email</p>
-                    <p className="font-medium">Dariyushmotors@gmail.com</p>
-                  </div>
-                </div>
+              <div className="form-row">
+                <label><span>Email *</span><input type="email" name="email" autoComplete="email" required /></label>
+                <label><span>Phone *</span><input type="tel" name="phone" autoComplete="tel" required /></label>
               </div>
-            </div>
-
-            <div className="glass-panel p-8 rounded-2xl fade-up delay-100">
-              <form id="contact-form" className="space-y-4" onSubmit={handleContactSubmit}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input type="text" placeholder="Name" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors" />
-                  <input type="text" placeholder="Company" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input type="email" placeholder="Email" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors" />
-                  <input type="tel" placeholder="Phone" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors" />
-                </div>
-                <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors appearance-none" defaultValue="">
-                  <option value="" disabled>Required Capacity</option>
+              <label>
+                <span>Required capacity</span>
+                <select name="capacity" defaultValue="">
+                  <option value="" disabled>Select system capacity</option>
                   <option value="1kw">1kW System</option>
                   <option value="3kw">3kW System</option>
                   <option value="5kw">5kW System</option>
                   <option value="custom">Custom/Commercial</option>
                 </select>
-                <textarea placeholder="Message" rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors resize-none" />
-                <button
-                  type="submit"
-                  className="w-full btn-primary py-4 font-bold text-lg disabled:opacity-60 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
-                  style={submitSuccess ? { backgroundColor: '#10B981', color: 'white' } : {}}
-                >
-                  {btnText}
-                </button>
-              </form>
-            </div>
+              </label>
+              <label><span>Project notes</span><textarea name="message" rows={4} /></label>
+              <button type="submit" className="button form-submit" disabled={isSubmitting} aria-live="polite">
+                {isSubmitting ? 'Sending…' : submitSuccess ? 'Message sent' : 'Send enquiry'}
+                {submitSuccess ? <Check size={18} /> : <ArrowUpRight size={18} />}
+              </button>
+            </form>
           </div>
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer className="bg-[#051118] text-gray-400 py-12 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                  <Wind className="text-primary w-5 h-5" />
-                </div>
-                <span className="font-bold text-xl tracking-tight text-white">Dariyush Motors</span>
-              </div>
-              <p className="text-sm mb-4 max-w-sm">
-                A next-generation renewable energy manufacturer focused on practical urban
-                deployment and decentralized power solutions.
-              </p>
-              <p className="text-xs text-gray-500">CIN: U27100MP2024PTC073691 | Inc: 22/11/2024</p>
-            </div>
+      <footer className="site-footer">
+        <div className="site-container">
+          <div className="footer-main">
             <div>
-              <h4 className="text-white font-medium mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#about" className="hover:text-accent transition-colors">About Us</a></li>
-                <li><a href="#products" className="hover:text-accent transition-colors">Products</a></li>
-                <li><a href="#how-it-works" className="hover:text-accent transition-colors">Technology</a></li>
-              </ul>
+              <a href="#hero" className="brand brand-footer"><BrandMark /><span className="brand-name">Dariyush Motors</span></a>
+              <p>A next-generation renewable energy manufacturer focused on practical urban deployment and decentralized power solutions.</p>
             </div>
-            <div>
-              <h4 className="text-white font-medium mb-4">Connect</h4>
-              <div className="flex space-x-4">
-                <a href="#" aria-label="LinkedIn" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent hover:text-primary transition-all">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" aria-label="Twitter" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent hover:text-primary transition-all">
-                  <Twitter className="w-5 h-5" />
-                </a>
-              </div>
+            <div className="footer-links">
+              <div><span>Navigate</span>{NAV_LINKS.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}</div>
+              <div><span>Connect</span><a href="#" aria-label="Dariyush Motors on LinkedIn"><Linkedin size={17} /> LinkedIn</a><a href="#" aria-label="Dariyush Motors on Twitter"><Twitter size={17} /> Twitter</a></div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs">
-            <p>&copy; 2026 Dariyushmotors Pvt Ltd. All rights reserved.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            </div>
+          <div className="footer-legal">
+            <p>© 2026 Dariyushmotors Pvt Ltd. All rights reserved.</p>
+            <p>CIN: U27100MP2024PTC073691 <span /> Incorporated: 22/11/2024</p>
+            <div><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
           </div>
         </div>
       </footer>
