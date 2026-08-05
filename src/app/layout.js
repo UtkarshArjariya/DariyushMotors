@@ -1,7 +1,13 @@
-import { Inter } from 'next/font/google';
+import { Archivo, IBM_Plex_Mono, Inter } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' });
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  variable: '--font-plex-mono',
+  weight: ['400', '500', '600'],
+});
 
 export const metadata = {
   title: 'Dariyush Motors | Advanced Vertical Axis Wind Turbines',
@@ -25,7 +31,7 @@ const jsonLd = {
   name: 'Dariyushmotors Pvt Ltd',
   alternateName: 'Dariyush Motors',
   url: 'https://www.dariyushmotors.com',
-  logo: 'https://www.dariyushmotors.com/icon.png',
+  logo: 'https://www.dariyushmotors.com/icon.svg',
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+91 9685536795',
@@ -47,7 +53,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`scroll-smooth ${inter.variable}`}>
+    <html lang="en" className={`${inter.variable} ${archivo.variable} ${plexMono.variable}`}>
       <head>
         <script
           type="application/ld+json"
