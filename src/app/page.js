@@ -93,8 +93,7 @@ const NAV_LINKS = [
 function BrandMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
-      <span />
-      <span />
+      <Wind size={20} strokeWidth={2} />
     </span>
   );
 }
